@@ -444,21 +444,21 @@ tasks.register("assembleRelease") { dependsOn(packageAar) }
 tasks.register("assemble")        { dependsOn(packageAar) }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Ivy publishing — publishes to a local Ivy repository.
+// Ivy publishing — flat local Ivy repository.
 //
-// Repository layout (ivy-default pattern):
+// All files land directly in build/repository/ with no subdirectories:
 //   build/repository/
-//     de.wellenvogel.android.ndk.thirdparty/
-//       openssl[-shared]/
-//         3.5.5-1/
-//           ivy-3.5.5-1.xml           ← Ivy descriptor
-//           openssl[-shared]-3.5.5-1.aar
+//     de.wellenvogel.android.ndk.thirdparty-openssl[-shared]-3.5.5-1.aar
+//     de.wellenvogel.android.ndk.thirdparty-openssl[-shared]-3.5.5-1.ivy
 //
-// To consume from another Gradle project add:
+// To consume from another Gradle project:
 //   repositories {
 //     ivy {
-//       url = uri("/path/to/openssl-android-aar/openssl/build/repository")
-//       patternLayout { artifact("[organisation]/[module]/[revision]/[artifact]-[revision].[ext]") }
+//       url = uri("/path/to/openssl-android-aar/build/repository")
+//       patternLayout {
+//         artifact("[organisation]-[module]-[revision].[ext]")
+//         ivy("[organisation]-[module]-[revision].ivy")
+//       }
 //       metadataSources { ivyDescriptor() }
 //     }
 //   }
@@ -500,8 +500,8 @@ publishing {
             name = "local"
             url  = uri(layout.buildDirectory.dir("repository"))
             patternLayout {
-                artifact("[organisation]/[module]/[revision]/[artifact]-[revision].[ext]")
-                ivy("[organisation]/[module]/[revision]/ivy-[revision].xml")
+                artifact("[organisation]-[module]-[revision].[ext]")
+                ivy("[organisation]-[module]-[revision].ivy")
             }
         }
     }
