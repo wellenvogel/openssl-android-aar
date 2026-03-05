@@ -42,8 +42,8 @@ jobs:
 
       - name: Install NDK
         run: |
-          echo "$ANDROID_SDK_ROOT/cmdline-tools/latest/bin" >> "$GITHUB_PATH"
-          sdkmanager --install "ndk;${{ steps.version.outputs.ndk_version }}"
+          $ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager --install \
+            "ndk;${{ steps.version.outputs.ndk_version }}"
           echo "ANDROID_NDK_HOME=$ANDROID_SDK_ROOT/ndk/${{ steps.version.outputs.ndk_version }}" \
             >> "$GITHUB_ENV"
 
