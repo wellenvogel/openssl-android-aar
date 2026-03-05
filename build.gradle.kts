@@ -52,28 +52,34 @@ fun sha256(file: File): String {
     return digest.digest().joinToString("") { "%02x".format(it) }
 }
 
-fun fetchText(url: String): String =
-    URI(url).toURL().openConnection().also {
-        it.setRequestProperty("User-Agent", "Gradle/openssl-android-aar")
-        it.connect()
-    }.getInputStream().bufferedReader().readText().trim()
+// java.net.http.HttpClient (Java 11+) handles all redirects natively and never
+// produces an FtpURLConnection, unlike the old URLConnection cast approach.
+val httpClient: java.net.http.HttpClient = java.net.http.HttpClient.newBuilder()
+    .followRedirects(java.net.http.HttpClient.Redirect.NORMAL)
+    .build()
+
+fun fetchText(url: String): String {
+    val request = java.net.http.HttpRequest.newBuilder()
+        .uri(URI(url))
+        .header("User-Agent", "Gradle/openssl-android-aar")
+        .GET().build()
+    val response = httpClient.send(request, java.net.http.HttpResponse.BodyHandlers.ofString())
+    if (response.statusCode() !in 200..299)
+        throw GradleException("GET $url returned HTTP ${response.statusCode()}")
+    return response.body().trim()
+}
 
 fun download(url: String, dest: File) {
     logger.lifecycle("  Downloading $url")
-    var conn = URI(url).toURL().openConnection() as java.net.HttpURLConnection
-    conn.instanceFollowRedirects = true
-    conn.setRequestProperty("User-Agent", "Gradle/openssl-android-aar")
-    repeat(5) {
-        val code = conn.responseCode
-        if (code in 301..308) {
-            val loc = conn.getHeaderField("Location")
-            conn.disconnect()
-            conn = URI(loc).toURL().openConnection() as java.net.HttpURLConnection
-            conn.instanceFollowRedirects = true
-            conn.setRequestProperty("User-Agent", "Gradle/openssl-android-aar")
-        }
+    val request = java.net.http.HttpRequest.newBuilder()
+        .uri(URI(url))
+        .header("User-Agent", "Gradle/openssl-android-aar")
+        .GET().build()
+    val response = httpClient.send(request, java.net.http.HttpResponse.BodyHandlers.ofFile(dest.toPath()))
+    if (response.statusCode() !in 200..299) {
+        dest.delete()
+        throw GradleException("GET $url returned HTTP ${response.statusCode()}")
     }
-    conn.inputStream.use { i -> dest.outputStream().use { i.copyTo(it) } }
 }
 
 fun resolveNdk(): File {
