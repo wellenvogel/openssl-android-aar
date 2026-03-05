@@ -11,7 +11,7 @@ a single Gradle invocation. No shell scripts, no manual steps.
 | NDK version     | **29** (`29.0.13113456`)                   |
 | compileSdk      | **35**                                     |
 | minSdk          | **21**                                     |
-| OpenSSL         | **3.3.2** (static, `no-shared`)            |
+| OpenSSL         | **3.3.2** (static or shared)            |
 | ABIs            | `arm64-v8a`, `x86_64`, `armeabi-v7a`, `x86` |
 | 16 KB page-size | `-Wl,-z,max-page-size=16384`               |
 | CMake targets   | `openssl::crypto`, `openssl::ssl`          |
@@ -36,13 +36,8 @@ The NDK is located automatically in this order:
 
 ## Build
 
-### Step 1 — Install the Gradle wrapper jar (one-time)
 
-```bash
-bash scripts/install_gradle_wrapper.sh
-```
-
-### Step 2 — Build the AAR
+### Build the AAR
 
 ```bash
 ./gradlew :openssl:assembleRelease
@@ -67,7 +62,7 @@ Individual tasks can also be run independently:
 ./gradlew :openssl:packageAar        # full AAR (same as assembleRelease)
 ```
 
-### Publish to local Maven
+### Publish to local Ivy
 
 ```bash
 ./gradlew :openssl:publishReleasePublicationToLocalRepository
@@ -129,3 +124,5 @@ All tasks are fully incremental:
 - `assemblePrefab` and `packageAar` respect Gradle's up-to-date checks
 
 Delete `openssl/build/` to force a full rebuild.
+
+This repo was created using [Claude AI](https://claude.ai).
