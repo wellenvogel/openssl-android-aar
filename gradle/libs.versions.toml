@@ -1,0 +1,10 @@
+[versions]
+# OpenSSL 3.5.x LTS — first branch with native 16 KB ELF page-size support
+# (PR #28277, merged 2025-08-22, backported to 3.5.x)
+# LTS support until 2030-04-08.
+# Tarball: https://github.com/openssl/openssl/releases/download/openssl-3.5.5/openssl-3.5.5.tar.gz
+# SHA-256 fetched at build time from the accompanying .sha256 file on GitHub.
+openssl        = "3.5.5"
+minSdk         = "21"
+ndkVersion     = "29.0.13113456"
+sdkToolsVersion = "11076708"
