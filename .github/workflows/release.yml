@@ -20,31 +20,33 @@ jobs:
           distribution: temurin
           java-version: 17
 
-      - name: Install Gradle wrapper jar
-        run: |
-          curl -fSL \
-            "https://services.gradle.org/distributions/gradle-8.9-wrapper.jar" \
-            -o gradle/wrapper/gradle-wrapper.jar
-          sha256sum gradle/wrapper/gradle-wrapper.jar
-
-      - name: Read OpenSSL version
+      - name: Read versions from TOML
         id: version
         run: |
-          VERSION=$(grep '^openssl' gradle/libs.versions.toml \
-            | sed 's/.*= *"\(.*\)"/\1/')
-          echo "openssl_version=$VERSION" >> "$GITHUB_OUTPUT"
-          echo "tag_name=openssl-$VERSION" >> "$GITHUB_OUTPUT"
-          echo "release_name=OpenSSL $VERSION" >> "$GITHUB_OUTPUT"
+          python3 - << 'EOF'
+          import tomllib, os
 
-      - name: Set up Android SDK and NDK
+          with open("gradle/libs.versions.toml", "rb") as f:
+              toml = tomllib.load(f)
+
+          versions = toml["versions"]
+          openssl_version = versions["openssl"]
+          ndk_version     = versions["ndkVersion"]
+
+          with open(os.environ["GITHUB_OUTPUT"], "a") as out:
+              out.write(f"openssl_version={openssl_version}\n")
+              out.write(f"ndk_version={ndk_version}\n")
+              out.write(f"tag_name={openssl_version}\n")
+              out.write(f"release_name={openssl_version}\n")
+          EOF
+
+      - name: Set up Android SDK
         uses: android-actions/setup-android@v3
 
       - name: Install NDK
         run: |
-          NDK_VERSION=$(grep '^ndkVersion' gradle/libs.versions.toml \
-            | sed 's/.*= *"\(.*\)"/\1/')
-          echo "y" | sdkmanager "ndk;$NDK_VERSION"
-          echo "ANDROID_NDK_HOME=$ANDROID_SDK_ROOT/ndk/$NDK_VERSION" >> "$GITHUB_ENV"
+          echo "y" | sdkmanager "ndk;${{ steps.version.outputs.ndk_version }}"
+          echo "ANDROID_NDK_HOME=$ANDROID_SDK_ROOT/ndk/${{ steps.version.outputs.ndk_version }}" >> "$GITHUB_ENV"
 
       - name: Build static AAR
         run: ./gradlew publishReleasePublicationToLocalRepository
@@ -60,12 +62,12 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           TAG="${{ steps.version.outputs.tag_name }}"
-          NAME="${{ steps.version.outputs.release_name }}"
+          VERSION="${{ steps.version.outputs.openssl_version }}"
 
-          # Create the release (and tag) if it doesn't already exist
           gh release create "$TAG" \
-            --title "$NAME" \
-            --notes "Prefab AAR for OpenSSL ${{ steps.version.outputs.openssl_version }} targeting Android.
+            --title "$TAG" \
+            --target release \
+            --notes "Prefab AAR for OpenSSL ${VERSION} targeting Android.
 
           **Artifacts**
           - \`*-openssl-*.aar\` — static library build (link into your binary)
@@ -76,7 +78,7 @@ jobs:
           \`\`\`kotlin
           repositories {
               ivy {
-                  url = uri(\"https://github.com/${{ github.repository }}/releases/download/$TAG\")
+                  url = uri(\"https://github.com/${{ github.repository }}/releases/download/${TAG}\")
                   patternLayout {
                       artifact(\"[organisation]-[module]-[revision].[ext]\")
                       ivy(\"[organisation]-[module]-[revision].ivy\")
@@ -86,10 +88,9 @@ jobs:
           }
           dependencies {
               // Static:
-              implementation(\"de.wellenvogel.android.ndk.thirdparty:openssl:${{ steps.version.outputs.openssl_version }}-1@aar\")
+              implementation(\"de.wellenvogel.android.ndk.thirdparty:openssl:${VERSION}-1@aar\")
               // Shared:
-              // implementation(\"de.wellenvogel.android.ndk.thirdparty:openssl-shared:${{ steps.version.outputs.openssl_version }}-1@aar\")
+              // implementation(\"de.wellenvogel.android.ndk.thirdparty:openssl-shared:${VERSION}-1@aar\")
           }
           \`\`\`" \
-            --target release \
             build/repository/*
