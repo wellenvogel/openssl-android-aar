@@ -40,13 +40,12 @@ jobs:
               out.write(f"release_name={openssl_version}\n")
           EOF
 
-      - name: Set up Android SDK
-        uses: android-actions/setup-android@v3
-
       - name: Install NDK
         run: |
-          echo "y" | sdkmanager "ndk;${{ steps.version.outputs.ndk_version }}"
-          echo "ANDROID_NDK_HOME=$ANDROID_SDK_ROOT/ndk/${{ steps.version.outputs.ndk_version }}" >> "$GITHUB_ENV"
+          echo "$ANDROID_SDK_ROOT/cmdline-tools/latest/bin" >> "$GITHUB_PATH"
+          sdkmanager --install "ndk;${{ steps.version.outputs.ndk_version }}"
+          echo "ANDROID_NDK_HOME=$ANDROID_SDK_ROOT/ndk/${{ steps.version.outputs.ndk_version }}" \
+            >> "$GITHUB_ENV"
 
       - name: Build static AAR
         run: ./gradlew publishReleasePublicationToLocalRepository
@@ -88,9 +87,9 @@ jobs:
           }
           dependencies {
               // Static:
-              implementation(\"de.wellenvogel.android.ndk.thirdparty:openssl:${VERSION}-1@aar\")
+              implementation(\"de.wellenvogel.android.ndk.thirdparty:openssl:${VERSION}@aar\")
               // Shared:
-              // implementation(\"de.wellenvogel.android.ndk.thirdparty:openssl-shared:${VERSION}-1@aar\")
+              // implementation(\"de.wellenvogel.android.ndk.thirdparty:openssl-shared:${VERSION}@aar\")
           }
           \`\`\`" \
             build/repository/*
