@@ -7,7 +7,7 @@ plugins {
 }
 
 group   = "de.wellenvogel.android.ndk.thirdparty"
-version = "${libs.versions.openssl.get()}-1"
+version = libs.versions.openssl.get()
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Build configuration
@@ -463,7 +463,7 @@ tasks.register("assemble")        { dependsOn(packageAar) }
 //     }
 //   }
 //   dependencies {
-//     implementation("de.wellenvogel.android.ndk.thirdparty:openssl:3.5.5-1@aar")
+//     implementation("de.wellenvogel.android.ndk.thirdparty:openssl:3.5.5@aar")
 //   }
 // ─────────────────────────────────────────────────────────────────────────────
 publishing {
