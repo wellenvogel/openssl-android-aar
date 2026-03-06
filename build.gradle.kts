@@ -448,6 +448,32 @@ val packageAar by tasks.registering(Zip::class) {
 
 tasks.register("assembleRelease") { dependsOn(packageAar) }
 tasks.register("assemble")        { dependsOn(packageAar) }
+tasks.register("clean") {
+    group       = "build"
+    description = "Deletes all build outputs for the current build type ($libType). " +
+                  "Use 'cleanAll' to remove outputs for both types."
+    doLast {
+        listOf(
+            layout.buildDirectory.dir("openssl-out-$libType").get().asFile,
+            layout.buildDirectory.dir("prefab-$libType").get().asFile,
+            layout.buildDirectory.dir("outputs/aar").get().asFile,
+            layout.buildDirectory.dir("repository").get().asFile,
+            layout.buildDirectory.dir("intermediates").get().asFile,
+        ).forEach {
+            if (it.deleteRecursively()) logger.lifecycle("Deleted $it")
+        }
+    }
+}
+
+tasks.register("cleanAll") {
+    group       = "build"
+    description = "Deletes all build outputs for both static and shared build types."
+    doLast {
+        val buildDir = layout.buildDirectory.get().asFile
+        if (buildDir.deleteRecursively()) logger.lifecycle("Deleted $buildDir")
+    }
+}
+
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Ivy publishing — flat local Ivy repository.
