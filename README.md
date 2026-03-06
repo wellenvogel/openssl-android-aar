@@ -2,6 +2,8 @@
 
 Builds **OpenSSL 3.5.5 LTS** as an Android **Prefab AAR** using NDK 29.
 
+Intended to be used as replacement for the outdated [google android ndk thirdparty libs](https://android.googlesource.com/platform/tools/ndkports).
+
 The entire build — downloading the OpenSSL source from GitHub, verifying its
 SHA-256, locating or auto-installing the NDK, cross-compiling for all ABIs,
 and packaging the Prefab AAR — is driven by a single Gradle invocation. No
