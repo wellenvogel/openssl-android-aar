@@ -41,8 +41,16 @@ The NDK is located automatically in this order:
 
 ## Build
 
+### Step 1 — Install the Gradle wrapper jar (one-time)
 
-### Compile
+The wrapper jar is not committed to the repository. Obtain it once:
+
+```bash
+curl -fSL https://services.gradle.org/distributions/gradle-8.9-wrapper.jar \
+  -o gradle/wrapper/gradle-wrapper.jar
+```
+
+### Step 2 — Build
 
 ```bash
 # Static libraries (default) — produces openssl-release.aar

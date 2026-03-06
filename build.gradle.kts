@@ -36,7 +36,7 @@ val artifactId = if (buildShared) "openssl-shared" else "openssl"
 
 val tarballBaseUrl = "https://github.com/openssl/openssl/releases/download/openssl-$opensslVersion"
 val moduleDir      = projectDir
-val opensslOut     = moduleDir.resolve("src/main/cpp/openssl")
+val opensslOut     = layout.buildDirectory.dir("openssl-out-$libType").get().asFile
 val scratchDir     = layout.buildDirectory.dir("openssl-build").get().asFile
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -352,10 +352,10 @@ val buildOpenSSL by tasks.registering {
 // ─────────────────────────────────────────────────────────────────────────────
 val assemblePrefab by tasks.registering {
     dependsOn(buildOpenSSL)
-    outputs.dir(layout.buildDirectory.dir("prefab"))
+    outputs.dir(layout.buildDirectory.dir("prefab-$libType"))
 
     doLast {
-        val prefabRoot = layout.buildDirectory.dir("prefab").get().asFile
+        val prefabRoot = layout.buildDirectory.dir("prefab-$libType").get().asFile
         prefabRoot.deleteRecursively()
         prefabRoot.mkdirs()
 
@@ -432,7 +432,7 @@ val packageAar by tasks.registering(Zip::class) {
 
     from(moduleDir.resolve("src/main/AndroidManifest.xml"))
     from(emptyJar.get().archiveFile)
-    from(layout.buildDirectory.dir("prefab")) { into("prefab") }
+    from(layout.buildDirectory.dir("prefab-$libType")) { into("prefab") }
 
     // For shared builds also include the .so files under jni/<abi>/ so that
     // AGP's standard mergeJniLibs task picks them up when building the APK/AAB.
